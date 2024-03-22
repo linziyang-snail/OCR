@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@400;500&display=swap" rel="stylesheet">
+    <title>內政部移民署OCR測試</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            margin: 0;
+            background-color: #f5f5f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            display: flex;
+            width: 80%; /* 調整整個容器的寬度 */
+            max-width: 960px; /* 最大寬度 */
+        }
+
+        .form-container, .result-container {
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+            background-color: white;
+        }
+
+        .form-container {
+            width: 30%; /* 表單容器寬度 */
+            margin-right: 5%; /* 添加一些間隔 */
+        }
+
+        .result-container {
+            width: 70%; /* 結果容器寬度 */
+        }
+
+        .flex-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 10%;
+        }
+
+        input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 8px 0;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #e4af34;
+            color: white;
+            padding: 10px 20px;
+            margin: 8px 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+
+        button:hover {
+            opacity: 0.9;
+        }
+
+        #result img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="form-container">
+            <h2>內政部移民署OCR測試</h2>
+
+            <div class="flex-center">
+                <button type="button" onclick="sample1()">範本一</button>
+                <button type="button" onclick="sample2()">範本二</button>
+            </div>
+
+            <form id="formAutomation">
+                <label for="idno">統一證號:</label>
+                <input type="text" id="idno" name="idno"><br><br>
+        
+                <label for="approveDate">核發日期:</label>
+                <input type="text" id="approveDate" name="approveDate"><br><br>
+        
+                <label for="endStayPeriod">居留期限:</label>
+                <input type="text" id="endStayPeriod" name="endStayPeriod"><br><br>
+        
+                <label for="barcodeNo">台灣身份證號:</label>
+                <input type="text" id="barcodeNo" name="barcodeNo"><br><br>
+        
+                <div class="flex-center">
+                    <button type="button" onclick="submitForm()">送出</button>
+                    <button type="button" onclick="reset()">重置</button>
+                </div>
+
+            </form>
+        </div>
+
+        
+        <div class="result-container">
+            <h3>結果:</h3>
+            <span style="font-weight: bolder; font-size: xx-large;" id="success"></span>
+            <div id="result"></div>
+        </div>
+
+    </div>
+
+    <script>
+async function submitForm() {
+    // 獲取表單值
+    const idno = document.getElementById('idno').value;
+    const approveDate = document.getElementById('approveDate').value;
+    const endStayPeriod = document.getElementById('endStayPeriod').value;
+    const barcodeNo = document.getElementById('barcodeNo').value;
+
+    document.getElementById('success').innerHTML = '';
+    // 顯示加載提示
+    document.getElementById('result').innerHTML = '<p>正在處理中...</p>';
+
+    const response = await fetch('http://localhost:3000/api/OCR001', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+            idno: idno,
+            approveDate: approveDate,
+            endStayPeriod: endStayPeriod,
+            barcodeNo: barcodeNo
+        }),
+    });
+
+    if (response.ok) {
+        const data = await response.json(); 
+        const imageBase64 = data.ResBody.image;
+        const RtnDesc = data.ResCode.RtnDesc;
+
+        // 顯示結果描述
+        document.getElementById('success').innerHTML = `${RtnDesc}`;
+
+        // 如果有圖片，顯示圖片
+        if (imageBase64) {
+            document.getElementById('result').innerHTML = `<img id='image1' src="${imageBase64}" />`;
+        } else {
+            // 清除加載提示
+            document.getElementById('result').innerHTML = '';
+        }
+    } else {
+        // 處理錯誤情況
+        alert('發生錯誤，請檢查輸入或服務器狀態。');
+    }
+}
+
+    function sample1() {
+        document.getElementById('idno').value = 'A800348135';
+        document.getElementById('approveDate').value = '20230809';
+        document.getElementById('endStayPeriod').value = '20240827';
+        document.getElementById('barcodeNo').value = 'F230001240';
+    }
+
+    function sample2() {
+        document.getElementById('idno').value = '123123';
+        document.getElementById('approveDate').value = '123123123';
+        document.getElementById('endStayPeriod').value = '123123123';
+        document.getElementById('barcodeNo').value = '123123123';
+    }
+
+    </script>
+</body>
+</html>
